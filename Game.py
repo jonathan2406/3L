@@ -10,7 +10,7 @@ class Game:
         while True:
             self.tablero.imprimirTablero()
             self.turnoMin()
-            verificacion = self.tablero.verificar() 
+            verificacion = self.tablero.verificar(self.tablero.matrix) 
             if verificacion == -1:
                 print("Jugador X ganador...")
                 return
@@ -20,15 +20,18 @@ class Game:
             elif verificacion == 0:
                 print("Empate...")
                 return
+            posicion = self.tablero.minMax(self.tablero.matrix, 'O')[1]
+            self.tablero.matrix[posicion[0]][posicion[1]] = 'O'
         
     def turnoMin(self):
         while True:
-            fila = input("ingresa la fila: ")
-            columna = input("ingresa la columna: ")
-            if fila.isdigit() == False or columna.isdigit() == False:
+            try:
+                fila = int(input("ingresa la fila: "))
+                columna = int(input("ingresa la columna: "))
+            except:
                 print("ingresaste algo que no es un digito")
                 continue
-            elif fila >= 4 or columna >= 4:
+            if fila >= 4 or columna >= 4:
                 print("numeros desproporcionados")
                 continue
             elif self.tablero.matrix[fila][columna] != "-":
@@ -40,3 +43,5 @@ class Game:
 
  
 
+eo = Game()
+eo.run()
