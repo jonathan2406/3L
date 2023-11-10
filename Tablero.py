@@ -1,7 +1,7 @@
 import pandas as pd
 from tabulate import tabulate
 from colorama import Fore, Style
-import time
+import random
 
 class Tablero:
     def __init__(self):
@@ -14,6 +14,7 @@ class Tablero:
                     return -1
                 if matrix[i][j] == "O" and matrix[i+1][j] == "O" and matrix[i+1][j+1] == "O":
                     return 1
+                
         if self.verificarEmpate(matrix) == True:
             return 0
 
@@ -34,52 +35,71 @@ class Tablero:
         df.columns = [f"{Fore.GREEN}{col}{Style.RESET_ALL}" for col in df.columns]
         print(tabulate(df, tablefmt="grid", headers="keys", showindex=True))
 
-    def minMax(self, tablero, turno):
+    def heuristica(self):
+        for filas in range(len(self.matrix)-1):
+            for columnas in range(len(self.matrix)):
+                if self.vericarHeuristica(filas, columnas) == True:
+                    return
+        self.randomMax()
+
+    def randomMax(self):
+        while(True):
+            filaRandom = random.randint(0,3)
+            columnaRandom = random.randint(0,3)
+            if self.matrix[filaRandom][columnaRandom] == '-':
+                self.matrix[filaRandom][columnaRandom] = 'O'
+                return
+                    
+                
+    def vericarHeuristica(self, filas, columna):
+        if self.matrix[filas][columna] == 'X':
+            if self.matrix[filas+1][columna] == '-':
+                self.matrix[filas+1][columna] = 'O'
+                return True
+        return False
+
+    def minMax(self, tablero, turno, alfa=float('-inf'), beta=float('inf')):
         resultado = self.verificar(tablero)
         if resultado is not None:
-            return resultado, None
+            return resultado, None, []
 
-        if turno == 'O':
-            mejor_valor = float('-inf')
-        else:
-            mejor_valor = float('inf')
-
+        mejor_valor = float('-inf') if turno == 'O' else float('inf')
         mejor_jugada = None
+        lista_hijos = []
 
         for filas in range(len(tablero)):
             for columnas in range(len(tablero[0])):
                 if tablero[filas][columnas] == "-":
                     tablero[filas][columnas] = turno
-                    valor, _ = self.minMax(tablero, 'X' if turno == 'O' else 'O')
+                    valor, _, _ = self.minMax(tablero, 'X' if turno == 'O' else 'O', alfa, beta)
                     tablero[filas][columnas] = "-"
 
                     if turno == 'O':
                         if valor > mejor_valor:
                             mejor_valor = valor
                             mejor_jugada = (filas, columnas)
+                        alfa = max(alfa, mejor_valor)
                     else:
                         if valor < mejor_valor:
                             mejor_valor = valor
                             mejor_jugada = (filas, columnas)
+                        beta = min(beta, mejor_valor)
 
-        return mejor_valor, mejor_jugada
+                    lista_hijos.append((valor, (filas, columnas)))
 
-        
-eo = Tablero()
-eo.matrix = [["X","O","-",'-'],
-             ["O","O","-",'-'],
-             ["X","-","-",'-'],
-             ['X','O','X','O']]
+                    if alfa >= beta:
+                        break  
+        return mejor_valor, mejor_jugada, lista_hijos
 
-matriz = eo.minMax(eo.matrix, "O")
-print(matriz)
-
-
-
-
-
-
-        
+    def encontrar_ganadora(self, lista_hijos):
+        tablero_simulado = self.matrix
+        for valor, coordenada in lista_hijos:
+            if valor == 1:  
+                tablero_simulado[coordenada[0]][coordenada[1]] = 'O'
+                if self.verificar(tablero_simulado) == 1:  
+                    return coordenada
+        return False
+    
 
 
 
